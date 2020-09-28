@@ -5,6 +5,8 @@ checkpoints/
 results/
 build/
 dist/
+label_data_tools/annos/train/*
+label_data_tools/annos/test/*
 *.png
 torch.egg-info/
 */**/__pycache__

@@ -1,1 +1,0 @@
-/media/love_you/DOCUMENTS/Study/mocban_all/depthmap_train/083601010101_rol270_thres40.png 0.44 0.44 0.44 0.44
