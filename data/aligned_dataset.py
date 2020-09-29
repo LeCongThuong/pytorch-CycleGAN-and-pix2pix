@@ -52,7 +52,7 @@ class AlignedDataset(BaseDataset):
 
         A = A_transform(A)
         B = B_transform(origin_B)
-        origin_B = np.array(self.origin_B)
+        origin_B = np.array(origin_B)
 
         return {'A': A, 'B': B, 'origin_B': origin_B, 'A_paths': AB_path, 'B_paths': AB_path}
 
