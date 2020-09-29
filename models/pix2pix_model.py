@@ -114,8 +114,7 @@ class Pix2PixModel(BaseModel):
         # First, G(A) should fake the discriminator
         if i != 0:
             threshold = int(self.image_paths.split('/')[-1].split('_')[-1][5:7]) + random.uniform(5, 30)
-            np_image_origin_b = np.array(self.origin_B)
-            np_new_origin_b = np.where(np_image_origin_b >= threshold, 255, 0).astype(np.uint8)
+            np_new_origin_b = np.where(self.origin_B >= threshold, 255, 0).astype(np.uint8)
             pil_processed_image = Image.fromarray(np_new_origin_b)
             real_A = self.convert_to_tensor_and_normalize(pil_processed_image)
         else:
