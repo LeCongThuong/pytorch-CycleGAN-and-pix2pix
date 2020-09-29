@@ -3,6 +3,7 @@ debug*
 datasets/
 checkpoints/
 results/
+ ../../.ipynb_checkpoints/
 build/
 dist/
 label_data_tools/annos/train/*
