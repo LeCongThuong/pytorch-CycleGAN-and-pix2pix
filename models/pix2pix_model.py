@@ -113,13 +113,19 @@ class Pix2PixModel(BaseModel):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
         if i != 0:
-            threshold = int(float(self.image_paths.split('/')[-1].split('_')[-1][5:7])*100) + random.randint(5, 30)
+            threshold = float(self.image_paths[0].split('/')[-1].split('_')[-1][5:9]) * 255
+            if threshold > 127.5:
+                threshold = threshold - random.randint(3, 15)
+            else:
+                threshold = threshold + random.randint(3, 15)
             np_new_origin_b = np.where(self.origin_B >= threshold, 255, 0).astype(np.uint8)
             np_new_origin_b = np_new_origin_b.squeeze()
             pil_processed_image = Image.fromarray(np_new_origin_b)
-            real_A = self.convert_to_tensor_and_normalize(pil_processed_image).unsqueeze(0)
+            real_A = self.convert_to_tensor_and_normalize(pil_processed_image).unsqueeze(0).to(self.device)
         else:
-            real_A = self.real_A
+            real_A = self.real_A.to(self.device)
+
+        self.fake_B = self.netG(real_A)
         fake_AB = torch.cat((real_A, self.fake_B), 1)
         pred_fake = self.netD(fake_AB)
         self.loss_G_GAN = self.criterionGAN(pred_fake, True)
