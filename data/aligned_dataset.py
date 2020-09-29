@@ -43,7 +43,7 @@ class AlignedDataset(BaseDataset):
         w, h = AB.size
         w2 = int(w / 2)
         A = AB.crop((0, 0, w2, h))
-        B = AB.crop((w2, 0, w, h))
+        origin_B = AB.crop((w2, 0, w, h))
 
         # apply the same transform to both A and B
         transform_params = get_params(self.opt, A.size)
@@ -51,9 +51,9 @@ class AlignedDataset(BaseDataset):
         B_transform = get_transform(self.opt, transform_params, grayscale=(self.output_nc == 1))
 
         A = A_transform(A)
-        B = B_transform(B)
+        B = B_transform(origin_B)
 
-        return {'A': A, 'B': B, 'A_paths': AB_path, 'B_paths': AB_path}
+        return {'A': A, 'B': B, 'origin_B': origin_B, 'A_paths': AB_path, 'B_paths': AB_path}
 
     def __len__(self):
         """Return the total number of images in the dataset."""

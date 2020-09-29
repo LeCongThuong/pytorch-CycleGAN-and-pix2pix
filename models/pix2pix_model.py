@@ -1,6 +1,11 @@
 import torch
 from .base_model import BaseModel
 from . import networks
+import torchvision.transforms as transforms
+import numpy as np
+import random
+import PIL
+from PIL import Image
 
 
 class Pix2PixModel(BaseModel):
@@ -43,6 +48,7 @@ class Pix2PixModel(BaseModel):
             opt (Option class)-- stores all the experiment flags; needs to be a subclass of BaseOptions
         """
         BaseModel.__init__(self, opt)
+        self.opt = opt
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
         self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake']
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
@@ -81,6 +87,8 @@ class Pix2PixModel(BaseModel):
         AtoB = self.opt.direction == 'AtoB'
         self.real_A = input['A' if AtoB else 'B'].to(self.device)
         self.real_B = input['B' if AtoB else 'A'].to(self.device)
+        self.origin_B = input['origin_B']
+
         self.image_paths = input['A_paths' if AtoB else 'B_paths']
 
     def forward(self):
@@ -101,10 +109,18 @@ class Pix2PixModel(BaseModel):
         self.loss_D = (self.loss_D_fake + self.loss_D_real) * 0.5
         self.loss_D.backward()
 
-    def backward_G(self):
+    def backward_G(self, i):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
-        fake_AB = torch.cat((self.real_A, self.fake_B), 1)
+        if i != 0:
+            threshold = int(self.image_paths.split('/')[-1].split('_')[-1][5:7]) + random.uniform(5, 30)
+            np_image_origin_b = np.array(self.origin_B)
+            np_new_origin_b = np.where(np_image_origin_b >= threshold, 255, 0).astype(np.uint8)
+            pil_processed_image = Image.fromarray(np_new_origin_b)
+            real_A = self.convert_to_tensor_and_normalize(pil_processed_image)
+        else:
+            real_A = self.real_A
+        fake_AB = torch.cat((real_A, self.fake_B), 1)
         pred_fake = self.netD(fake_AB)
         self.loss_G_GAN = self.criterionGAN(pred_fake, True)
         # Second, G(A) = B
@@ -122,7 +138,18 @@ class Pix2PixModel(BaseModel):
         self.optimizer_D.step()          # update D's weights
         # update G
         self.set_requires_grad(self.netD, False)  # D requires no gradients when optimizing G
-        for _ in range(3):
+        for i in range(3):
             self.optimizer_G.zero_grad()        # set G's gradients to zero
-            self.backward_G()                   # calculate graidents for G
+            self.backward_G(i)                   # calculate graidents for G
             self.optimizer_G.step()             # udpate G's weights
+
+    def convert_to_tensor_and_normalize(self, image):
+        transform_list = []
+        grayscale = self.opt.input_nc == 1
+        transform_list += [transforms.ToTensor()]
+        if grayscale:
+            transform_list += [transforms.Normalize((0.5,), (0.5,))]
+        else:
+            transform_list += [transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
+        image_transform = transforms.Compose(transform_list)
+        return image_transform(image)
