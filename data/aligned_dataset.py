@@ -75,8 +75,8 @@ def get_label_dict(image_paths_list):
         image_id = get_image_id(image_path)
         image_id_list.append(image_id)
 
-    image_paths_list = list(set(image_id_list))
-    index_list = list(range(len(image_paths_list)))
+    image_id_list = list(set(image_id_list))
+    index_list = list(range(len(image_id_list)))
     label_mapping_dict = dict(zip(image_id_list, index_list))
     return label_mapping_dict
 
