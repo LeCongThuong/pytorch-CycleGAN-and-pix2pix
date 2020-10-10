@@ -631,7 +631,8 @@ class ClassifierModel(nn.Module):
         else:
             self.backbone = models.vgg19_bn()
             self.backbone.classifier[6] = nn.Linear(self.backbone.classifier[6].in_features, num_classes)
+        self.softmax = nn.LogSoftmax(dim=1)
 
     def forward(self, input):
-        output = self.backbone(input)
+        output = self.softmax(self.backbone(input))
         return output
