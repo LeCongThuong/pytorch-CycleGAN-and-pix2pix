@@ -27,6 +27,7 @@ class AlignedDataset(BaseDataset):
         assert(self.opt.load_size >= self.opt.crop_size)   # crop_size should be smaller than the size of loaded image
         self.input_nc = self.opt.output_nc if self.opt.direction == 'BtoA' else self.opt.input_nc
         self.output_nc = self.opt.input_nc if self.opt.direction == 'BtoA' else self.opt.output_nc
+        self.num_classes = len(list(self.label_mapping_dict.keys()))
 
     def __getitem__(self, index):
         """Return a data point and its metadata information.
@@ -58,7 +59,7 @@ class AlignedDataset(BaseDataset):
         B = B_transform(B)
 
         image_id = get_image_id(AB_path)
-        target_id = self.label_mapping_dict(image_id)
+        target_id = self.label_mapping_dict[image_id]
         target_id = torch.tensor(target_id, dtype=torch.long)
 
         return {'A': A, 'B': B, 'target_id': target_id, 'A_paths': AB_path, 'B_paths': AB_path}
