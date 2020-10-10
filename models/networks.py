@@ -621,6 +621,7 @@ class PixelDiscriminator(nn.Module):
 
 class ClassifierModel(nn.Module):
     def __init__(self, num_classes, arch_name='resnet18'):
+        super(ClassifierModel, self).__init__()
         if arch_name == 'resnet18':
             self.backbone = models.resnet18()
             self.backbone.fc = nn.Linear(self.backbone.fc.in_features, num_classes)
