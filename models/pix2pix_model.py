@@ -64,7 +64,7 @@ class Pix2PixModel(BaseModel):
         if self.isTrain:
             # define loss functions
             self.criterionGAN = networks.GANLoss(opt.gan_mode).to(self.device)
-            self.criterionL1 = torch.nn.NLLLoss()
+            self.criterionL1 = torch.nn.L1Loss()
             self.classifier_loss = torch.nn.NLLLoss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = torch.optim.Adam(self.netG.parameters(), lr=opt.lr, betas=(opt.beta1, 0.999))
@@ -107,7 +107,6 @@ class Pix2PixModel(BaseModel):
         self.loss_D.backward()
 
         pred_class_score = self.netC(self.fake_B.clone().detach().requires_grad_(True))
-        print("Label of samples: ", self.target_id)
         self.loss_D_C = self.classifier_loss(pred_class_score, self.target_id)
         self.loss_D_C.backward()
 
