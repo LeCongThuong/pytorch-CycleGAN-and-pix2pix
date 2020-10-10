@@ -70,7 +70,7 @@ class AlignedDataset(BaseDataset):
 
 def get_label_dict(image_paths_list):
     image_id_list = []
-    for image_path in image_id_list:
+    for image_path in image_paths_list:
         image_id = get_image_id(image_path)
         image_id_list.append(image_id)
 
