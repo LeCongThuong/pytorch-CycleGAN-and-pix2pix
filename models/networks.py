@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
-
+import torchvision.models as models
 
 ###############################################################################
 # Helper Functions
@@ -202,6 +202,10 @@ def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal'
         raise NotImplementedError('Discriminator model name [%s] is not recognized' % netD)
     return init_net(net, init_type, init_gain, gpu_ids)
 
+
+def define_C(arch_name, num_classes, init_type, init_gain, gpu_ids):
+    net = ClassifierModel(arch_name=arch_name, num_classes=num_classes)
+    return init_net(net, init_type, init_gain, gpu_ids)
 
 ##############################################################################
 # Classes
@@ -613,3 +617,20 @@ class PixelDiscriminator(nn.Module):
     def forward(self, input):
         """Standard forward."""
         return self.net(input)
+
+
+class ClassifierModel(nn.Module):
+    def __init__(self, num_classes, arch_name='resnet18'):
+        if arch_name == 'resnet18':
+            self.backbone = models.resnet18()
+            self.backbone.fc = nn.Linear(self.backbone.fc.in_features, num_classes)
+        elif arch_name == 'resnet50':
+            self.backbone = models.resnet50()
+            self.backbone.fc = nn.Linear(self.backbone.fc.in_features, num_classes)
+        else:
+            self.backbone = models.vgg19_bn()
+            self.backbone.classifier[6] = nn.Linear(self.backbone.classifier[6].in_features, num_classes)
+
+    def forward(self, input):
+        output = self.backbone(input)
+        return output
