@@ -1,0 +1,13 @@
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002030101_rol90_thres0.37.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002030101_rol90_thres0.4.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002030101_rol90_thres0.45.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002030101_rol90_thres0.5.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002030101_rol90_thres0.52.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002030101_rol90_thres0.56.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/083602010106_rol180_thres0.56.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002060201_rol90_thres0.56.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002060201_rol90_thres0.37.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002060201_rol90_thres0.4.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002060201_rol90_thres0.45.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002060201_rol90_thres0.5.png
+/media/love_you/DOCUMENTS/Study/mocban_all/augment_train/259002060201_rol90_thres0.52.png
