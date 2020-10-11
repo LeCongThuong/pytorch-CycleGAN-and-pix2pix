@@ -22,9 +22,12 @@ class AlignedDataset(BaseDataset):
         BaseDataset.__init__(self, opt)
         self.dir_AB = os.path.join(opt.dataroot, opt.phase)  # get the image directory
         self.AB_paths = sorted(make_dataset(self.dir_AB, opt.max_dataset_size))  # get image paths
+        random.shuffle(self.AB_paths)
+        self.label_mapping_dict = get_label_dict(self.AB_paths)
         assert(self.opt.load_size >= self.opt.crop_size)   # crop_size should be smaller than the size of loaded image
         self.input_nc = self.opt.output_nc if self.opt.direction == 'BtoA' else self.opt.input_nc
         self.output_nc = self.opt.input_nc if self.opt.direction == 'BtoA' else self.opt.output_nc
+        self.num_classes = len(list(self.label_mapping_dict.keys()))
 
     def __getitem__(self, index):
         """Return a data point and its metadata information.
