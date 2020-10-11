@@ -195,7 +195,7 @@ def define_D(input_nc, num_classes, ndf, netD, n_layers_D=3, norm='batch', init_
     norm_layer = get_norm_layer(norm_type=norm)
 
     if netD == 'basic':  # default PatchGAN classifier
-        net = NLayerDiscriminator(input_nc, num_classes, ndf, n_layers=3, norm_layer=norm_layer)
+        net = NLayerDiscriminator(input_nc, num_classes, ndf, n_layers=5, norm_layer=norm_layer)
     elif netD == 'n_layers':  # more options
         net = NLayerDiscriminator(input_nc, ndf, n_layers_D, norm_layer=norm_layer)
     elif netD == 'pixel':     # classify if each pixel is real or fake
@@ -579,7 +579,7 @@ class NLayerDiscriminator(nn.Module):
         ]
         self.backbone = nn.Sequential(*sequence)
         gan_head_list = [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
-        num_features_list = [492032, 2048, num_classes]
+        num_features_list = [32768, 2048, num_classes]
         classifier_head_list = [nn.Flatten()]
         classifier_head_list += [nn.Linear(num_features_list[i], num_features_list[i + 1]) for i in range(2)]
         self.classifier_head = nn.Sequential(*classifier_head_list)
