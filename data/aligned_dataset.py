@@ -2,6 +2,8 @@ import os
 from data.base_dataset import BaseDataset, get_params, get_transform
 from data.image_folder import make_dataset
 from PIL import Image
+import random
+import torch
 
 
 class AlignedDataset(BaseDataset):
@@ -53,8 +55,29 @@ class AlignedDataset(BaseDataset):
         A = A_transform(A)
         B = B_transform(B)
 
-        return {'A': A, 'B': B, 'A_paths': AB_path, 'B_paths': AB_path}
+        image_id = get_image_id(AB_path)
+        target_id = self.label_mapping_dict[image_id]
+        target_id = torch.tensor(target_id, dtype=torch.long)
+
+        return {'A': A, 'B': B, 'target_id': target_id, 'A_paths': AB_path, 'B_paths': AB_path}
 
     def __len__(self):
         """Return the total number of images in the dataset."""
         return len(self.AB_paths)
+
+
+def get_label_dict(image_paths_list):
+    image_id_list = []
+    for image_path in image_paths_list:
+        image_id = get_image_id(image_path)
+        image_id_list.append(image_id)
+
+    image_id_list = list(set(image_id_list))
+    index_list = list(range(len(image_id_list)))
+    label_mapping_dict = dict(zip(image_id_list, index_list))
+    return label_mapping_dict
+
+
+def get_image_id(image_path):
+    image_id = image_path.split(os.path.sep)[-1].split('_')[0]
+    return image_id
