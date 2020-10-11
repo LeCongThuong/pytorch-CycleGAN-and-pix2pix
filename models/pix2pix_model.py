@@ -44,7 +44,7 @@ class Pix2PixModel(BaseModel):
         """
         BaseModel.__init__(self, opt)
         # specify the training losses you want to print out. The training/test scripts will call <BaseModel.get_current_losses>
-        self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake', 'D_C']
+        self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake', 'D_C', 'G_C']
         # specify the images you want to save/display. The training/test scripts will call <BaseModel.get_current_visuals>
         self.visual_names = ['real_A', 'fake_B', 'real_B']
         # specify the models you want to save to the disk. The training/test scripts will call <BaseModel.save_networks> and <BaseModel.load_networks>
@@ -108,12 +108,13 @@ class Pix2PixModel(BaseModel):
         """Calculate GAN and L1 loss for the generator"""
         # First, G(A) should fake the discriminator
         fake_AB = torch.cat((self.real_A, self.fake_B), 1)
-        pred_fake = self.netD(fake_AB, is_real_image=False)
+        pred_fake, classifier_pred = self.netD(fake_AB, is_real_image=False)
         self.loss_G_GAN = self.criterionGAN(pred_fake, True)
+        self.loss_G_C = self.criterionC(classifier_pred, self.target_id)
         # Second, G(A) = B
         self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
         # combine loss and calculate gradients
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1
+        self.loss_G = self.loss_G_GAN + self.loss_G_L1 + self.loss_G_C
         self.loss_G.backward()
 
     def optimize_parameters(self):
