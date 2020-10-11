@@ -110,11 +110,10 @@ class Pix2PixModel(BaseModel):
         fake_AB = torch.cat((self.real_A, self.fake_B), 1)
         pred_fake, classifier_pred = self.netD(fake_AB, is_real_image=False)
         self.loss_G_GAN = self.criterionGAN(pred_fake, True)
-        self.loss_G_C = self.criterionC(classifier_pred, self.target_id)
         # Second, G(A) = B
         self.loss_G_L1 = self.criterionL1(self.fake_B, self.real_B) * self.opt.lambda_L1
         # combine loss and calculate gradients
-        self.loss_G = self.loss_G_GAN + self.loss_G_L1 + self.loss_G_C
+        self.loss_G = self.loss_G_GAN + self.loss_G_L1
         self.loss_G.backward()
 
     def optimize_parameters(self):
