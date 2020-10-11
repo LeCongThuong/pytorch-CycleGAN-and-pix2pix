@@ -579,7 +579,7 @@ class NLayerDiscriminator(nn.Module):
         ]
         self.backbone = nn.Sequential(*sequence)
         gan_head_list = [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
-        num_features_list = [ndf * nf_mult, 2048, num_classes]
+        num_features_list = [492032, 4096, num_classes]
         classifier_head_list = [nn.Flatten()]
         classifier_head_list += [nn.Linear(num_features_list[i], num_features_list[i + 1]) for i in range(2)]
         self.classifier_head = nn.Sequential(*classifier_head_list)
@@ -588,7 +588,6 @@ class NLayerDiscriminator(nn.Module):
     def forward(self, input):
         """Standard forward."""
         backbone_output = self.backbone(input)
-        print("Shape of backbone: ", backbone_output.shape)
         gan_head_output = self.gan_head(backbone_output)
         classifier_head_output = F.log_softmax(self.classifier_head(backbone_output), dim=1)
         return gan_head_output, classifier_head_output
