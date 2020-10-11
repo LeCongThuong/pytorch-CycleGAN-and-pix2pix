@@ -3,6 +3,7 @@ import torch.nn as nn
 from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
+import torch.nn.functional as F
 
 
 ###############################################################################
@@ -538,11 +539,12 @@ class UnetSkipConnectionBlock(nn.Module):
 class NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
 
-    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d):
+    def __init__(self, input_nc, num_classes, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d):
         """Construct a PatchGAN discriminator
 
         Parameters:
             input_nc (int)  -- the number of channels in input images
+            num_classes(int) -- the number of classes
             ndf (int)       -- the number of filters in the last conv layer
             n_layers (int)  -- the number of conv layers in the discriminator
             norm_layer      -- normalization layer
@@ -574,13 +576,20 @@ class NLayerDiscriminator(nn.Module):
             norm_layer(ndf * nf_mult),
             nn.LeakyReLU(0.2, True)
         ]
-
-        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
-        self.model = nn.Sequential(*sequence)
+        self.backbone = nn.Sequential(*sequence)
+        gan_head_list = [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        num_features_list = [ndf * nf_mult, 2048, num_classes]
+        classifier_head_list = [nn.Flatten()]
+        classifier_head_list += [nn.Linear(num_features_list[i], num_features_list[i + 1]) for i in range(2)]
+        self.classifier_head = nn.Sequential(*classifier_head_list)
+        self.gan_head = nn.Sequential(*gan_head_list)
 
     def forward(self, input):
         """Standard forward."""
-        return self.model(input)
+        backbone_output = self.backbone(input)
+        gan_head_output = self.gan_head(backbone_output)
+        classifier_head_output = F.log_softmax(self.classifier_head(backbone_output, dim=1))
+        return gan_head_output, classifier_head_output
 
 
 class PixelDiscriminator(nn.Module):
