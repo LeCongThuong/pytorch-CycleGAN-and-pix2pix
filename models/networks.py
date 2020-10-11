@@ -588,6 +588,7 @@ class NLayerDiscriminator(nn.Module):
     def forward(self, input):
         """Standard forward."""
         backbone_output = self.backbone(input)
+        print("Shape of backbone output: ", backbone_output.shape)
         gan_head_output = self.gan_head(backbone_output)
         classifier_head_output = F.log_softmax(self.classifier_head(backbone_output), dim=1)
         return gan_head_output, classifier_head_output
