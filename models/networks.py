@@ -585,13 +585,14 @@ class NLayerDiscriminator(nn.Module):
         self.classifier_head = nn.Sequential(*classifier_head_list)
         self.gan_head = nn.Sequential(*gan_head_list)
 
-    def forward(self, input):
+    def forward(self, input, is_real_image=True):
         """Standard forward."""
         backbone_output = self.backbone(input)
-        print("Shape of backbone output: ", backbone_output.shape)
         gan_head_output = self.gan_head(backbone_output)
-        classifier_head_output = F.log_softmax(self.classifier_head(backbone_output), dim=1)
-        return gan_head_output, classifier_head_output
+        if not is_real_image:
+            classifier_head_output = F.log_softmax(self.classifier_head(backbone_output), dim=1)
+            return gan_head_output, classifier_head_output
+        return gan_head_output
 
 
 class PixelDiscriminator(nn.Module):
