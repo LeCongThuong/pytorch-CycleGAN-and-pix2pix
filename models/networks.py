@@ -579,20 +579,18 @@ class NLayerDiscriminator(nn.Module):
         ]
         self.backbone = nn.Sequential(*sequence)
         gan_head_list = [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
-        num_features_list = [ndf * nf_mult, 2048, num_classes]
+        # num_features_list = [ndf * nf_mult, 2048, num_classes]
         classifier_head_list = [nn.AdaptiveAvgPool2d((1, 1)), nn.Flatten()]
-        classifier_head_list += [nn.Linear(num_features_list[i], num_features_list[i + 1]) for i in range(2)]
+        classifier_head_list += [nn.Linear(ndf * nf_mult, num_classes)]
         self.classifier_head = nn.Sequential(*classifier_head_list)
         self.gan_head = nn.Sequential(*gan_head_list)
 
-    def forward(self, input, is_real_image=True):
+    def forward(self, input):
         """Standard forward."""
         backbone_output = self.backbone(input)
         gan_head_output = self.gan_head(backbone_output)
-        if not is_real_image:
-            classifier_head_output = F.log_softmax(self.classifier_head(backbone_output), dim=1)
-            return gan_head_output, classifier_head_output
-        return gan_head_output
+        classifier_head_output = F.log_softmax(self.classifier_head(backbone_output), dim=1)
+        return gan_head_output, classifier_head_output
 
 
 class PixelDiscriminator(nn.Module):
