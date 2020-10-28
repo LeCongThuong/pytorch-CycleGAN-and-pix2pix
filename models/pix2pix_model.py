@@ -64,8 +64,8 @@ class Pix2PixModel(BaseModel):
             self.netD = networks.define_D(opt.input_nc + opt.output_nc, opt.num_classes, opt.ndf, opt.netD,
                                           opt.n_layers_D, opt.norm, opt.init_type, opt.init_gain, self.gpu_ids)
 
-        print("NetD Architecture: ")
-        summary(self.netD, (6, opt.crop_size, opt.crop_size))
+        # print("NetD Architecture: ")
+        # summary(self.netD, (6, opt.crop_size, opt.crop_size))
 
         if self.isTrain:
             # define loss functions
