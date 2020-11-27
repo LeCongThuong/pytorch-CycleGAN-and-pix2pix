@@ -66,6 +66,9 @@ class Visualizer():
         self.name = opt.name
         self.port = opt.display_port
         self.saved = False
+        self.model_generation_in_val_dir = os.path.join(opt.checkpoints_dir, opt.name, 'val_images_generation')
+        self.model_generation_in_train_val_dir = os.path.join(opt.checkpoints_dir, opt.name, 'train_val_images_generation')
+        util.mkdirs([self.model_generation_in_val_dir, self.model_generation_in_train_val_dir])
         if self.display_id > 0:  # connect to a visdom server given <display_port> and <display_server>
             import visdom
             self.ncols = opt.display_ncols
@@ -83,6 +86,19 @@ class Visualizer():
         with open(self.log_name, "a") as log_file:
             now = time.strftime("%c")
             log_file.write('================ Training Loss (%s) ================\n' % now)
+
+    def save_image_to_dir(self, visuals, image_path, aspect_ratio=1.0, is_train_val=True):
+        short_path = ntpath.basename(image_path[0])
+        name = os.path.splitext(short_path)[0]
+        for label, im_data in visuals.items():
+            im = util.tensor2im(im_data)
+            image_name = '%s_%s.png' % (name, label)
+            if is_train_val:
+                save_path = os.path.join(self.model_generation_in_train_val_dir, image_name)
+            else:
+                save_path = os.path.join(self.model_generation_in_val_dir, image_name)
+
+            util.save_image(im, save_path, aspect_ratio=aspect_ratio)
 
     def reset(self):
         """Reset the self.saved status"""
