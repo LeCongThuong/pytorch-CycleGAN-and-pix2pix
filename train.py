@@ -20,15 +20,22 @@ See frequently asked questions at: https://github.com/junyanz/pytorch-CycleGAN-a
 """
 import time
 from options.train_options import TrainOptions
-from data import create_dataset
+from data import create_dataset, create_val_train_dataset, create_val_dataset
 from models import create_model
 from util.visualizer import Visualizer
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()   # get training options
     dataset = create_dataset(opt)  # create a dataset given opt.dataset_mode and other options
+    val_train_dataset = create_val_train_dataset(opt)
+    val_dataset = create_val_dataset(opt)
     dataset_size = len(dataset)    # get the number of images in the dataset.
+    val_train_dataset_size = len(val_train_dataset)
+    val_dataset_size = len(val_dataset)
+
     print('The number of training images = %d' % dataset_size)
+    print('The number of val train images = %d' % val_train_dataset_size)
+    print('The number of val images = %d' % val_dataset_size)
 
     model = create_model(opt)      # create a model given opt.model and other options
     model.setup(opt)               # regular setup: load and print networks; create schedulers
@@ -73,5 +80,22 @@ if __name__ == '__main__':
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_iters))
             model.save_networks('latest')
             model.save_networks(epoch)
+
+        if epoch % opt.evaluate_epoch_freq == 0:
+            print("Evaluate on train_val_dataset and val dataset at the end of epoch %d, iters %d" % (epoch, total_iters))
+            model.eval()
+            for i, train_val_data in enumerate(val_train_dataset):
+                model.set_input(train_val_data)  # unpack data from data loader
+                model.test()  # run inference
+                visuals = model.get_current_visuals()  # get image results
+                img_path = model.get_image_paths()  # get image paths
+                visualizer.save_image_to_dir(visuals, img_path, aspect_ratio=opt.aspect_ratio, is_train_val=True)
+
+            for i, val_data in enumerate(val_dataset):
+                model.set_input(val_data)  # unpack data from data loader
+                model.test()  # run inference
+                visuals = model.get_current_visuals()  # get image results
+                img_path = model.get_image_paths()  # get image paths
+                visualizer.save_image_to_dir(visuals, img_path, aspect_ratio=opt.aspect_ratio, is_train_val=False)
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
