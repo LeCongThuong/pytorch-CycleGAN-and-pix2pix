@@ -36,5 +36,6 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--lr_policy', type=str, default='linear', help='learning rate policy. [linear | step | plateau | cosine]')
         parser.add_argument('--lr_decay_iters', type=int, default=50, help='multiply by a gamma every lr_decay_iters iterations')
         parser.add_argument('--evaluate_epoch_freq', type=int, default=1, help='frequency of epoch for evaluating on train val and val dataset')
+        parser.add_argument('--aspect_ratio', type=float, default=1.0, help='aspect ratio of result images')
         self.isTrain = True
         return parser
