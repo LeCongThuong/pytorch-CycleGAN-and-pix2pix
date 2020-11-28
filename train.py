@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
         for key, value in total_losses.items():
             key_str = key + '_epoch'
-            average_loss = average_loss / epoch_iter
+            average_loss = value / epoch_iter
             writer.add_scalar(key, average_loss, epoch)
 
         if epoch % opt.save_epoch_freq == 0:              # cache our model every <save_epoch_freq> epochs
