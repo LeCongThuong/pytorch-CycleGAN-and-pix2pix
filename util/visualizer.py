@@ -94,10 +94,11 @@ class Visualizer():
             im = util.tensor2im(im_data)
             image_name = '%s_%s.png' % (name, label)
             if is_train_val:
-                save_path = os.path.join(self.model_generation_in_train_val_dir, epoch, image_name)
+                os.makedirs(os.path.join(self.model_generation_in_train_val_dir, epoch), exist_ok=True)
+                save_path = self.model_generation_in_train_val_dir + os.path.sep + epoch + os.path.sep + image_name
             else:
-                save_path = os.path.join(self.model_generation_in_val_dir, epoch, image_name)
-            os.makedirs(save_path, exist_ok=True)
+                os.makedirs(os.path.join(self.model_generation_in_val_dir, epoch), exist_ok=True)
+                save_path = self.model_generation_in_val_dir + os.path.sep + epoch + os.path.sep + image_name
             util.save_image(im, save_path, aspect_ratio=aspect_ratio)
 
     def reset(self):
