@@ -83,13 +83,14 @@ if __name__ == '__main__':
 
         if epoch % opt.evaluate_epoch_freq == 0:
             print("Evaluate on train_val_dataset and val dataset at the end of epoch %d, iters %d" % (epoch, total_iters))
-            model.eval()
+            if opt.eval:
+                model.eval()
             for i, train_val_data in enumerate(val_train_dataset):
                 model.set_input(train_val_data)  # unpack data from data loader
                 model.test()  # run inference
                 visuals = model.get_current_visuals()  # get image results
                 img_path = model.get_image_paths()  # get image paths
-                visualizer.save_image_to_dir(visuals, img_path, aspect_ratio=opt.aspect_ratio, is_train_val=True)
+                visualizer.save_image_to_dir(visuals, img_path, epoch=epoch, aspect_ratio=opt.aspect_ratio, is_train_val=True)
 
             for i, val_data in enumerate(val_dataset):
                 model.set_input(val_data)  # unpack data from data loader
