@@ -87,17 +87,17 @@ class Visualizer():
             now = time.strftime("%c")
             log_file.write('================ Training Loss (%s) ================\n' % now)
 
-    def save_image_to_dir(self, visuals, image_path, aspect_ratio=1.0, is_train_val=True):
+    def save_image_to_dir(self, visuals, image_path, epoch, aspect_ratio=1.0, is_train_val=True):
         short_path = ntpath.basename(image_path[0])
         name = os.path.splitext(short_path)[0]
         for label, im_data in visuals.items():
             im = util.tensor2im(im_data)
             image_name = '%s_%s.png' % (name, label)
             if is_train_val:
-                save_path = os.path.join(self.model_generation_in_train_val_dir, image_name)
+                save_path = os.path.join(self.model_generation_in_train_val_dir, epoch, image_name)
             else:
-                save_path = os.path.join(self.model_generation_in_val_dir, image_name)
-
+                save_path = os.path.join(self.model_generation_in_val_dir, epoch, image_name)
+            os.makedirs(save_path, exist_ok=True)
             util.save_image(im, save_path, aspect_ratio=aspect_ratio)
 
     def reset(self):
