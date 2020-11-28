@@ -23,6 +23,11 @@ from options.train_options import TrainOptions
 from data import create_dataset, create_val_train_dataset, create_val_dataset
 from models import create_model
 from util.visualizer import Visualizer
+from torch.utils.tensorboard import SummaryWriter
+import os
+import util.util
+from collections import defaultdict
+
 
 if __name__ == '__main__':
     opt = TrainOptions().parse()   # get training options
@@ -37,12 +42,16 @@ if __name__ == '__main__':
     print('The number of val train images = %d' % val_train_dataset_size)
     print('The number of val images = %d' % val_dataset_size)
 
+    log_dir = os.path.join(opt.checkpoints_dir, opt.name, 'loss_logs')
+    util.mkdirs(log_dir)
+    writer = SummaryWriter(log_dir)
+
     model = create_model(opt)      # create a model given opt.model and other options
     model.setup(opt)               # regular setup: load and print networks; create schedulers
     visualizer = Visualizer(opt)   # create a visualizer that display/save images and plots
     total_iters = 0                # the total number of training iterations
-
     for epoch in range(opt.epoch_count, opt.n_epochs + opt.n_epochs_decay + 1):    # outer loop for different epochs; we save the model by <epoch_count>, <epoch_count>+<save_latest_freq>
+        total_losses = defaultdict(float)
         epoch_start_time = time.time()  # timer for entire epoch
         iter_data_time = time.time()    # timer for data loading per iteration
         epoch_iter = 0                  # the number of training iterations in current epoch, reset to 0 every epoch
@@ -58,13 +67,19 @@ if __name__ == '__main__':
             model.set_input(data)         # unpack data from dataset and apply preprocessing
             model.optimize_parameters()   # calculate loss functions, get gradients, update network weights
 
+            # log losses
+            losses = model.get_current_losses()
+            for key, value in losses.items():
+                key_str = key + '_iter'
+                writer.add_scalar(key, value, total_iters)
+                total_losses[key] += value
+
             if total_iters % opt.display_freq == 0:   # display images on visdom and save images to a HTML file
                 save_result = total_iters % opt.update_html_freq == 0
                 model.compute_visuals()
                 visualizer.display_current_results(model.get_current_visuals(), epoch, save_result)
 
             if total_iters % opt.print_freq == 0:    # print training losses and save logging information to the disk
-                losses = model.get_current_losses()
                 t_comp = (time.time() - iter_start_time) / opt.batch_size
                 visualizer.print_current_losses(epoch, epoch_iter, losses, t_comp, t_data)
                 if opt.display_id > 0:
@@ -76,6 +91,12 @@ if __name__ == '__main__':
                 model.save_networks(save_suffix)
 
             iter_data_time = time.time()
+
+        for key, value in total_losses.items():
+            key_str = key + '_epoch'
+            average_loss = average_loss / epoch_iter
+            writer.add_scalar(key, average_loss, epoch)
+
         if epoch % opt.save_epoch_freq == 0:              # cache our model every <save_epoch_freq> epochs
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_iters))
             model.save_networks('latest')
@@ -90,13 +111,13 @@ if __name__ == '__main__':
                 model.test()  # run inference
                 visuals = model.get_current_visuals()  # get image results
                 img_path = model.get_image_paths()  # get image paths
-                visualizer.save_image_to_dir(visuals, img_path, epoch=epoch, aspect_ratio=opt.aspect_ratio, is_train_val=True)
+                visualizer.save_image_to_dir(visuals, img_path, epoch=str(epoch), aspect_ratio=opt.aspect_ratio, is_train_val=True)
 
             for i, val_data in enumerate(val_dataset):
                 model.set_input(val_data)  # unpack data from data loader
                 model.test()  # run inference
                 visuals = model.get_current_visuals()  # get image results
                 img_path = model.get_image_paths()  # get image paths
-                visualizer.save_image_to_dir(visuals, img_path, aspect_ratio=opt.aspect_ratio, is_train_val=False)
+                visualizer.save_image_to_dir(visuals, img_path, epoch=str(epoch), aspect_ratio=opt.aspect_ratio, is_train_val=False)
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
