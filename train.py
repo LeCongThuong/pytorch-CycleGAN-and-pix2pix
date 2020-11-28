@@ -25,7 +25,7 @@ from models import create_model
 from util.visualizer import Visualizer
 from torch.utils.tensorboard import SummaryWriter
 import os
-import util.util
+from util import util
 from collections import defaultdict
 
 
