@@ -71,7 +71,7 @@ if __name__ == '__main__':
             losses = model.get_current_losses()
             for key, value in losses.items():
                 key_str = key + '_iter'
-                writer.add_scalar(key, value, total_iters)
+                writer.add_scalar(key_str, value, total_iters)
                 total_losses[key] += value
 
             if total_iters % opt.display_freq == 0:   # display images on visdom and save images to a HTML file
@@ -95,7 +95,7 @@ if __name__ == '__main__':
         for key, value in total_losses.items():
             key_str = key + '_epoch'
             average_loss = value / epoch_iter
-            writer.add_scalar(key, average_loss, epoch)
+            writer.add_scalar(key_str, average_loss, epoch)
 
         if epoch % opt.save_epoch_freq == 0:              # cache our model every <save_epoch_freq> epochs
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_iters))
