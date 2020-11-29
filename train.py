@@ -71,7 +71,7 @@ if __name__ == '__main__':
             losses = model.get_current_losses()
             for key, value in losses.items():
                 key_str = key + '_iter'
-                writer.add_scalar(key, value, total_iters)
+                writer.add_scalar(key_str, value, total_iters)
                 total_losses[key] += value
 
             if total_iters % opt.display_freq == 0:   # display images on visdom and save images to a HTML file
@@ -95,7 +95,7 @@ if __name__ == '__main__':
         for key, value in total_losses.items():
             key_str = key + '_epoch'
             average_loss = value / epoch_iter
-            writer.add_scalar(key, average_loss, epoch)
+            writer.add_scalar(key_str, average_loss, epoch)
 
         if epoch % opt.save_epoch_freq == 0:              # cache our model every <save_epoch_freq> epochs
             print('saving the model at the end of epoch %d, iters %d' % (epoch, total_iters))
@@ -117,7 +117,7 @@ if __name__ == '__main__':
                 model.set_input(val_data)  # unpack data from data loader
                 model.test()  # run inference
                 visuals = model.get_current_visuals()  # get image results
-                img_path = model.get_image_paths()  # get image paths
+                img_path = model.cd get_image_paths()  # get image paths
                 visualizer.save_image_to_dir(visuals, img_path, epoch=str(epoch), aspect_ratio=opt.aspect_ratio, is_train_val=False)
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))
