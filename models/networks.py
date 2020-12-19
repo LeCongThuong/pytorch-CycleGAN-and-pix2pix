@@ -3,7 +3,7 @@ import torch.nn as nn
 from torch.nn import init
 import functools
 from torch.optim import lr_scheduler
-
+from torch.nn.utils import spectral_norm
 
 ###############################################################################
 # Helper Functions
@@ -196,6 +196,12 @@ def define_D(input_nc, ndf, netD, n_layers_D=3, norm='batch', init_type='normal'
         net = NLayerDiscriminator(input_nc, ndf, n_layers=3, norm_layer=norm_layer)
     elif netD == 'n_layers':  # more options
         net = NLayerDiscriminator(input_nc, ndf, n_layers_D, norm_layer=norm_layer)
+    elif netD == 'basic_sn':
+        net = NLayerDiscriminator(input_nc, ndf, n_layers=3, norm_layer=norm_layer, use_sn=True)
+    elif netD == 'basic_sa':
+        net = NLayerDiscriminator(input_nc, ndf, n_layers=3, norm_layer=norm_layer, use_sa=True)
+    elif netD == 'basic_sn_sa':
+        net = NLayerDiscriminator(input_nc, ndf, n_layers=3, norm_layer=norm_layer, use_sn=True, use_sa=True)
     elif netD == 'pixel':     # classify if each pixel is real or fake
         net = PixelDiscriminator(input_nc, ndf, norm_layer=norm_layer)
     else:
@@ -538,7 +544,7 @@ class UnetSkipConnectionBlock(nn.Module):
 class NLayerDiscriminator(nn.Module):
     """Defines a PatchGAN discriminator"""
 
-    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d):
+    def __init__(self, input_nc, ndf=64, n_layers=3, norm_layer=nn.BatchNorm2d, use_sn=False, use_sa=False):
         """Construct a PatchGAN discriminator
 
         Parameters:
@@ -551,31 +557,43 @@ class NLayerDiscriminator(nn.Module):
         if type(norm_layer) == functools.partial:  # no need to use bias as BatchNorm2d has affine parameters
             use_bias = norm_layer.func == nn.InstanceNorm2d
         else:
-            use_bias = norm_layer == nn.InstanceNorm2d
+            use_bias = True
 
         kw = 4
         padw = 1
-        sequence = [nn.Conv2d(input_nc, ndf, kernel_size=kw, stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
+        sequence = [use_conv2d(input_nc, ndf, kernel_size=kw, use_sn=use_sn, stride=2, padding=padw), nn.LeakyReLU(0.2, True)]
         nf_mult = 1
         nf_mult_prev = 1
         for n in range(1, n_layers):  # gradually increase the number of filters
             nf_mult_prev = nf_mult
             nf_mult = min(2 ** n, 8)
+            if use_sn:
+                sequence += [
+                    use_conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, use_sn=True, stride=2, padding=padw, bias=use_bias),
+                    nn.LeakyReLU(0.2, True)
+                ]
+            else:
+                sequence += [
+                    use_conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, use_sn=False, stride=2, padding=padw, bias=use_bias),
+                    norm_layer(ndf * nf_mult),
+                    nn.LeakyReLU(0.2, True)
+                ]
+        if use_sa:
+            sequence += [SelfAttn(ndf * nf_mult, use_sn)]
+        nf_mult_prev = nf_mult
+        nf_mult = min(2 ** n_layers, 8)
+        if use_sn:
             sequence += [
-                nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=2, padding=padw, bias=use_bias),
+                use_conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, use_sn=True, stride=1, padding=padw, bias=use_bias),
+                nn.LeakyReLU(0.2, True)
+            ]
+        else:
+            sequence += [
+                use_conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, use_sn=False, stride=1, padding=padw, bias=use_bias),
                 norm_layer(ndf * nf_mult),
                 nn.LeakyReLU(0.2, True)
             ]
-
-        nf_mult_prev = nf_mult
-        nf_mult = min(2 ** n_layers, 8)
-        sequence += [
-            nn.Conv2d(ndf * nf_mult_prev, ndf * nf_mult, kernel_size=kw, stride=1, padding=padw, bias=use_bias),
-            norm_layer(ndf * nf_mult),
-            nn.LeakyReLU(0.2, True)
-        ]
-
-        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, use_sn=use_sn, stride=1, padding=padw)]  # output 1 channel prediction map
         self.model = nn.Sequential(*sequence)
 
     def forward(self, input):
@@ -613,3 +631,45 @@ class PixelDiscriminator(nn.Module):
     def forward(self, input):
         """Standard forward."""
         return self.net(input)
+
+
+class SelfAttn(nn.Module):
+    def __init__(self, in_dim, use_sn=True):
+        super(SelfAttn, self).__init__()
+        self.chanel_in = in_dim
+
+        self.query_conv = use_conv2d(in_channels=in_dim, out_channels=in_dim // 8, kernel_size=1, use_sn=use_sn)
+        self.key_conv = use_conv2d(in_channels=in_dim, out_channels=in_dim // 8, kernel_size=1, use_sn=use_sn)
+        self.value_conv = use_conv2d(in_channels=in_dim, out_channels=in_dim, kernel_size=1, use_sn=use_sn)
+        self.gamma = nn.Parameter(torch.zeros(1))
+        self.softmax = nn.Softmax(dim=-1)
+
+    def forward(self, x):
+        m_batchsize, c, width, height = x.size()
+        proj_query = self.query_conv(x).view(m_batchsize, -1, width * height).permute(0, 2, 1)
+        proj_key = self.key_conv(x).view(m_batchsize, -1, width * height)
+        energy = torch.bmm(proj_query, proj_key)
+        attention = self.softmax(energy)
+        proj_value = self.value_conv(x).view(m_batchsize, -1, width * height)
+
+        out = torch.bmm(proj_value, attention.permute(0, 2, 1))
+        out = out.view(m_batchsize, c, width, height)
+
+        out = self.gamma * out + x
+        # return out,attention
+        return out
+
+
+def use_conv2d(in_channels, out_channels, kernel_size, use_sn=True, stride=1, padding=0, dilation=1, groups=1, bias=True):
+    conv2d_layer = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=stride, padding=padding,
+                             dilation=dilation, groups=groups, bias=bias)
+    if use_sn:
+        conv2d_layer = spectral_norm(conv2d_layer)
+    return conv2d_layer
+
+
+def use_linear(in_features, out_features, use_sn=True):
+    linear_layer = nn.Linear(in_features=in_features, out_features=out_features)
+    if use_sn:
+        linear_layer = spectral_norm(linear_layer)
+    return linear_layer
