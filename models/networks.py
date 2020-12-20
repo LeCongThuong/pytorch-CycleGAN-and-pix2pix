@@ -593,7 +593,7 @@ class NLayerDiscriminator(nn.Module):
                 norm_layer(ndf * nf_mult),
                 nn.LeakyReLU(0.2, True)
             ]
-        sequence += [nn.Conv2d(ndf * nf_mult, 1, kernel_size=kw, use_sn=use_sn, stride=1, padding=padw)]  # output 1 channel prediction map
+        sequence += [use_conv2d(ndf * nf_mult, 1, kernel_size=kw, use_sn=use_sn, stride=1, padding=padw)]  # output 1 channel prediction map
         self.model = nn.Sequential(*sequence)
 
     def forward(self, input):
