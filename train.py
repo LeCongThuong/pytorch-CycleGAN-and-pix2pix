@@ -113,11 +113,11 @@ if __name__ == '__main__':
                 img_path = model.get_image_paths()  # get image paths
                 visualizer.save_image_to_dir(visuals, img_path, epoch=str(epoch), aspect_ratio=opt.aspect_ratio, is_train_val=True)
 
-            for i, val_data in enumerate(val_dataset):
-                model.set_input(val_data)  # unpack data from data loader
-                model.test()  # run inference
-                visuals = model.get_current_visuals()  # get image results
-                img_path = model.get_image_paths()  # get image paths
-                visualizer.save_image_to_dir(visuals, img_path, epoch=str(epoch), aspect_ratio=opt.aspect_ratio, is_train_val=False)
+            # for i, val_data in enumerate(val_dataset):
+            #     model.set_input(val_data)  # unpack data from data loader
+            #     model.test()  # run inference
+            #     visuals = model.get_current_visuals()  # get image results
+            #     img_path = model.get_image_paths()  # get image paths
+            #     visualizer.save_image_to_dir(visuals, img_path, epoch=str(epoch), aspect_ratio=opt.aspect_ratio, is_train_val=False)
 
         print('End of epoch %d / %d \t Time Taken: %d sec' % (epoch, opt.n_epochs + opt.n_epochs_decay, time.time() - epoch_start_time))

@@ -164,7 +164,10 @@ def generate_images(img_dir: str, saved_dir: str, threshold_range_list=[[0.35, 0
     image_path_list = image_dir_path.rglob("*")
     for image_path in image_path_list:
         pil_image = Image.open(image_path)
-        threshold_list = generate_theshold_list(threshold_range_list)
+        #threshold_list = generate_theshold_list(threshold_range_list)
+        threshold_list = [0.28, 0.29, 0.3, 0.31, 0.32, 0.33, 0.34, 0.35, 0.36, 0.37, 0.38, 0.39, 0.4, 0.41, 0.42, 0.43, 0.44, 0.45, 0.46, 0.47, 0.48, 0.49, 0.5, 0.51, 0.52, 0.53, 0.54, 0.55, 0.56, 0.57, 0.58, 0.59, 0.6]
+
+        print(threshold_list)
         for threshold in threshold_list:
             processed_image = augment_image(pil_image, threshold=threshold, scaled_method=scaled_method,
                                             target_size=target_size)
@@ -380,10 +383,14 @@ def create_unseen_dataset(image_dir, des_dir, src_dir):
 
 
 if __name__ == '__main__':
-    img_dir = "/media/love_you/DOCUMENTS/Study/mocban_projects/classification_images/split_data/depth_map_train_images"
-    saved_dir = "/media/love_you/DOCUMENTS/Study/mocban_projects/classification_images/split_data/augmented_train_val_images"
+    #img_dir = "/media/love_you/DOCUMENTS/Study/mocban_projects/classification_images/split_data/depth_map_train_images"
+    img_dir = "/home/love_you/Downloads/mocban_curate_evaluation/depth_map_dir"
+    #saved_dir = "/media/love_you/DOCUMENTS/Study/mocban_projects/classification_images/split_data/augmented_train_val_images"
+    saved_dir = "/home/love_you/Downloads/mocban_curate_evaluation/augmented_good"
     os.makedirs(saved_dir, exist_ok=True)
-    generate_images(img_dir, saved_dir, threshold_range_list=[[0.28, 0.35], [0.36, 0.4], [0.41, 0.5], [0.51, 0.55], [0.56, 0.59]], scaled_method=PIL.Image.LANCZOS, target_size=(256, 256))
+    #generate_images(img_dir, saved_dir, threshold_range_list=[[0.28, 0.35], [0.36, 0.4], [0.41, 0.5], [0.51, 0.55], [0.56, 0.59]], scaled_method=PIL.Image.LANCZOS, target_size=(256, 256))
+    generate_images(img_dir, saved_dir, threshold_range_list=[[0.28, 0.35], [0.36, 0.4], [0.41, 0.5], [0.51, 0.55], [0.56, 0.59]],
+                    scaled_method=PIL.Image.LANCZOS, target_size=(256, 256))
     # image_list_file = "/home/love_you/Documents/Study/deep_learning/pytorch-CycleGAN-and-pix2pix/train_list_file.txt"
     # annos_file_path = "/home/love_you/Documents/Study/deep_learning/pytorch-CycleGAN-and-pix2pix/train_annos.txt"
     # checkpoint_id_file_path = "/home/love_you/Documents/Study/deep_learning/pytorch-CycleGAN-and-pix2pix/train_checkpoint.txt"
