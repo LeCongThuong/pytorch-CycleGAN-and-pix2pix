@@ -1,0 +1,5 @@
+outs:
+- md5: a530533b6544eb46d62433f29bcccaaa.dir
+  size: 739635372
+  nfiles: 1696
+  path: mocban_dataset
