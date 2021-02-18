@@ -3,6 +3,7 @@ import torch
 from collections import OrderedDict
 from abc import ABC, abstractmethod
 from . import networks
+import torch_optimizer as optim
 
 
 class BaseModel(ABC):
@@ -228,3 +229,17 @@ class BaseModel(ABC):
             if net is not None:
                 for param in net.parameters():
                     param.requires_grad = requires_grad
+
+    def configure_optimizers(self, params, optim_type='adam', lr=0.0002, betas=(0.5, 0.999), eps=1e-12):
+        if optim_type == 'adabelief':
+            return optim.AdaBelief(params,
+                                   lr=lr,
+                                   betas=betas,
+                                   eps=eps)
+        else:
+            return torch.optim.Adam(params,
+                                    lr=lr,
+                                    betas=betas,
+                                    eps=eps)
+
+
