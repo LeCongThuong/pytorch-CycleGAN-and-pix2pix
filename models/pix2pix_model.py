@@ -66,7 +66,7 @@ class Pix2PixModel(BaseModel):
             self.criterionL1 = torch.nn.L1Loss()
             # initialize optimizers; schedulers will be automatically created by function <BaseModel.setup>.
             self.optimizer_G = self.configure_optimizers(self.netG.parameters(), optim_type=opt.optim_type, lr=opt.lr, betas=(opt.beta1, 0.999))
-            self.optimizer_D = self.configure_optimizers(self.netG.parameters(), optim_type=opt.optim_type, lr=opt.lr, betas=(opt.beta1, 0.999))
+            self.optimizer_D = self.configure_optimizers(self.netD.parameters(), optim_type=opt.optim_type, lr=opt.lr, betas=(opt.beta1, 0.999))
             self.optimizers.append(self.optimizer_G)
             self.optimizers.append(self.optimizer_D)
 
