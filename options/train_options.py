@@ -39,5 +39,9 @@ class TrainOptions(BaseOptions):
         parser.add_argument('--evaluate_epoch_freq', type=int, default=10, help='frequency of epoch for evaluating on train val and val dataset')
         parser.add_argument('--aspect_ratio', type=float, default=1.0, help='aspect ratio of result images')
         parser.add_argument('--eval', action='store_true', help='use eval mode during test time.')
+        # add discriminator augment for training
+        parser.add_argument('--translate_aug_strength', type=float, default=0.3, help='ratio level of shifting vertically and horizontally')
+        parser.add_argument('--zoom_out_aug_strength', type=float, default=1.30, help='level of zoom out image in augmentation')
         self.isTrain = True
+        
         return parser
