@@ -601,10 +601,10 @@ class NLayerDiscriminator(nn.Module):
 
     def forward(self, input, take_base_model=False):
         """Standard forward."""
-        base_model = self.base_model(input)
-        output = self.base_model(base_model)
+        base_output = self.base_model(input)
+        output = self.head(base_output)
         if take_base_model:
-            return self.immediate_vec(nn.base_model), output
+            return self.immediate_vec(base_output), output
         else:
             return output
 

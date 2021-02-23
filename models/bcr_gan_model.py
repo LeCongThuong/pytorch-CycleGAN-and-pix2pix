@@ -1,7 +1,7 @@
 from .pix2pix_model import Pix2PixModel
 from . import networks
 import torch
-from diff_augment import ImgAugTransform
+from .diff_augment import ImgAugTransform
 
 
 class BCRGANModel(Pix2PixModel):
@@ -12,6 +12,7 @@ class BCRGANModel(Pix2PixModel):
             parser.set_defaults(pool_size=0, gan_mode='wgangp')
             parser.add_argument('--lambda_L1', type=float, default=100.0, help='weight for L1 loss')
             parser.add_argument('--bcr_cofficient', type=float, default=10, help='weight for dicriminator bcr loss ')
+        return parser
 
     def __init__(self, opt):
         Pix2PixModel.__init__(self, opt)
