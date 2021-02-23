@@ -593,12 +593,20 @@ class NLayerDiscriminator(nn.Module):
                 norm_layer(ndf * nf_mult),
                 nn.LeakyReLU(0.2, True)
             ]
-        sequence += [use_conv2d(ndf * nf_mult, 1, kernel_size=kw, use_sn=use_sn, stride=1, padding=padw)]  # output 1 channel prediction map
-        self.model = nn.Sequential(*sequence)
+        if use_sa:
+            sequence += [SelfAttn(ndf * nf_mult, use_sn)]
+        self.base_model = nn.Sequential(*sequence)
+        self.head = nn.Sequential(*[use_conv2d(ndf * nf_mult, 1, kernel_size=kw, use_sn=use_sn, stride=1, padding=padw)])  # output 1 channel prediction map
+        self.immediate_vec = nn.Flatten()
 
-    def forward(self, input):
+    def forward(self, input, take_base_model=False):
         """Standard forward."""
-        return self.model(input)
+        base_model = self.base_model(input)
+        output = self.base_model(base_model)
+        if take_base_model:
+            return self.immediate_vec(nn.base_model), output
+        else:
+            return output
 
 
 class PixelDiscriminator(nn.Module):
