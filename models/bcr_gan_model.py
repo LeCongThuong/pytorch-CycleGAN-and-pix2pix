@@ -2,6 +2,7 @@ from .pix2pix_model import Pix2PixModel
 from . import networks
 import torch
 from .diff_augment import ImgAugTransform
+# import matplotlib.pyplot as plt
 
 
 class BCRGANModel(Pix2PixModel):
@@ -17,7 +18,7 @@ class BCRGANModel(Pix2PixModel):
     def __init__(self, opt):
         Pix2PixModel.__init__(self, opt)
         self.aug = ImgAugTransform(self.opt)
-        self.criterionMSE = torch.nn.MSELoss()
+        self.criterionMSE = torch.nn.MSELoss(reduction='sum')
         self.loss_names = ['G_GAN', 'G_L1', 'D_real', 'D_fake', 'D_cr_real', 'D_cr_fake']
 
     def backward_D(self):
@@ -36,6 +37,13 @@ class BCRGANModel(Pix2PixModel):
         augmented_real_AB = torch.cat((self.real_A, augmented_real_B), 1)
         real_immediate_vec, pred_real = self.netD(real_AB, take_base_model=True)
         aug_real_immediate_vec, augmented_real = self.netD(augmented_real_AB, take_base_model=True)
+        # axes[0].imshow(self.fake_B.detach().cpu().numpy().squeeze().transpose((1, 2, 0)))
+        # axes[1].imshow(augmented_fake_B.detach().cpu().numpy().squeeze().transpose((1, 2, 0)))
+        # axes[2].imshow(self.real_B.detach().cpu().numpy().squeeze().transpose((1, 2, 0)))
+        # axes[3].imshow(augmented_real_B.detach().cpu().numpy().squeeze().transpose((1, 2, 0)))
+        # plt.savefig(f'/content/images/images_{self.image_num}.png')
+        # plt.close()
+        # self.image_num = self.image_num + 1
         self.loss_D_real = self.criterionGAN(pred_real, True)
         self.loss_D_cr_real = self.criterionMSE(aug_real_immediate_vec, real_immediate_vec)
         # combine loss and calculate gradients
